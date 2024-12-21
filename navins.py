@@ -10,6 +10,7 @@ import json
 import time
 import pywhatkit
 import wolframalpha
+import pyjokes
 # from deep_translator import GoogleTranslator
 
 # translator = GoogleTranslator(source='en', target='fr')
@@ -145,6 +146,23 @@ def load_preferences():
             return json.load(file)
     except FileNotFoundError:
         return {}
+def chatbot_conversation(query):
+    casual_responses = {
+        "how are you": "I'm just a program, but I'm functioning as expected! How about you?",
+        "who are you": "I'm Navins, your virtual assistant. I'm here to help with whatever I can!",
+        "who created you":"I was created by Navaneeth",
+        "what's your name": "My name is Navins. What's yours?",
+        "thank you": "You're welcome! I'm here to help.",
+        "goodbye": "Goodbye! Have a wonderful day!",
+        "bye": "Bye! Take care.",
+        "what can you do": "I can help with tasks like sending emails, setting alarms, playing music, fetching weather updates, answering questions, and much more!",
+    }
+
+    for key, response in casual_responses.items():
+        if key in query:
+            speak(response)
+            return True
+    return False
 
 # Main program
 if __name__ == "__main__":
@@ -225,4 +243,5 @@ if __name__ == "__main__":
             break
         elif "search" in query:
             search_google(query)
-
+        elif chatbot_conversation(query):
+            continue

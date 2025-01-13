@@ -11,6 +11,9 @@ import time
 import pywhatkit
 import wolframalpha
 import pyjokes
+import openai
+#openai.api_key =""
+
 # from deep_translator import GoogleTranslator
 
 # translator = GoogleTranslator(source='en', target='fr')
@@ -28,7 +31,22 @@ engine.setProperty('voice', voices[0].id)
 def speak(audio):
     engine.say(audio)
     engine.runAndWait()
+# Listen to user commands
+def takecommand():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        r.pause_threshold = 1
+        audio = r.listen(source)
 
+    try:
+        print("Recognizing...")
+        query = r.recognize_google(audio, language='en-in')
+        print(f"User said: {query}\n")
+    except Exception as e:
+        print("Say that again, please...")
+        return "None"
+    return query.lower()
 # Greet the user
 def wishme():
     hour = int(datetime.datetime.now().hour)
@@ -54,6 +72,7 @@ def tell_time():
     time = now.strftime("%H:%M")
     speak(f"The current time is {time}.")
 
+
 # Function to search something on Google
 def search_google(query):
     search_query = query.replace("search", "").strip()
@@ -63,22 +82,7 @@ def search_google(query):
     search_query = query.replace("search", "").strip()
     speak(f"Searching for {search_query} on Google.")
     webbrowser.open(f"https://www.google.com/search?q={search_query}")
-# Listen to user commands
-def takecommand():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        r.pause_threshold = 1
-        audio = r.listen(source)
 
-    try:
-        print("Recognizing...")
-        query = r.recognize_google(audio, language='en-in')
-        print(f"User said: {query}\n")
-    except Exception as e:
-        print("Say that again, please...")
-        return "None"
-    return query.lower()
 
 # Send Email
 def sendEmail(to, content):
@@ -128,6 +132,36 @@ def set_alarm(alarm_time):
 def tell_joke():
     joke = pyjokes.get_joke()
     speak(joke)
+def play_youtube_video(video_name):
+    """
+    Play a video on YouTube using its name.
+    """
+    try:
+        print(f"Searching and playing '{video_name}' on YouTube...")
+        pywhatkit.playonyt(video_name)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+def chat_with_gpt(prompt):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "You are a helpful assistant."},
+                      {"role": "user", "content": prompt}]
+        )
+        gpt_response = response['choices'][0]['message']['content']
+        return gpt_response
+    except openai.error.AuthenticationError:
+        print("Authentication failed. Please check your API key.")
+        return "Authentication failed. Please check your API key."
+    except openai.error.RateLimitError:
+        print("Rate limit exceeded. Please try again later.")
+        return "Rate limit exceeded. Please try again later."
+    except openai.error.APIError as e:
+        print(f"API error: {e}")
+        return f"API error: {e}"
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return f"Unexpected error: {e}"
 
 # Translation
 # def translate_text(text, target_language='es'):  # Default to Spanish
@@ -210,6 +244,7 @@ if __name__ == "__main__":
         elif 'open code' in query:
             codePath = r"C:\Users\YourUsername\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk"  # Replace with your VS Code path
             os.startfile(codePath)
+        
 
         elif 'email to' in query:
             try:
@@ -245,3 +280,17 @@ if __name__ == "__main__":
             search_google(query)
         elif chatbot_conversation(query):
             continue
+        elif "play video " in query:
+            video_name = query.replace("play video ", "")  # Extract video name from the query
+            play_youtube_video(video_name)
+        elif 'gpt' in query or 'ask gpt' in query:
+            speak("What do you want to ask?")
+            prompt = takecommand()
+            print(f"Prompt: {prompt}")  # Debug: Log what you hear from the user
+            try:
+                gpt_response = chat_with_gpt(prompt)
+                print(f"ChatGPT: {gpt_response}")  # Debug: Log the response
+                speak(gpt_response)
+            except Exception as e:
+                print(f"Error: {e}")
+                speak("Sorry, I couldn't process the request.")

@@ -134,5 +134,3 @@ Navins/
 * Set your own API keys for OpenAI and WolframAlpha in `.env`.
 
 
-
-Do you want me to do that?
